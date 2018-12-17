@@ -16,6 +16,7 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
+import com.blankj.utilcode.util.AppUtils;
 import com.cundong.apkpatch.example.ApkUtils;
 import com.cundong.apkpatch.example.Constants;
 import com.cundong.apkpatch.example.SignUtils;
@@ -212,7 +213,7 @@ public class ApkDownloader {
         if (packageInfo != null) {
 
 //                        requestOldMD5(packageInfo.versionCode, packageInfo.versionName);
-
+            mCurentRealMD5 = AppUtils.getAppSignatureMD5();
             String oldApkSource = ApkUtils.getSourceApkPath(mContext, Constants.TEST_PACKAGENAME);
 
             if (!TextUtils.isEmpty(oldApkSource)) {
