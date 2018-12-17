@@ -16,7 +16,10 @@ public class UpdateInfo {
     private String downUrl;
     /** 更新描述 **/
     private String description;
+    /**全包0，差分1，修复3*/
     private int isPatch;
+    /**更新是否要经用户同意，询问0，不询问1，强制2*/
+
     private int openSilent;
 
     /**

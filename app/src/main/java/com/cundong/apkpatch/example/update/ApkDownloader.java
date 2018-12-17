@@ -31,7 +31,7 @@ import java.io.PrintWriter;
 
 public class ApkDownloader {
     private final boolean isPatch;
-    private String mCurentRealMD5, mNewRealMD5;
+    private String mCurentRealMD5="dfdf", mNewRealMD5="dsfsdf";
     // 成功
     private static final int WHAT_SUCCESS = 1;
 
@@ -170,12 +170,12 @@ public class ApkDownloader {
     }
 
     private void beforeInstallApk(Context context) {
-        //install apk
+        Log.e("ApkDownloader","beforeInstallApk"+Thread.currentThread().getName());
         String apkFilePath = new StringBuilder(Environment.getExternalStorageDirectory().getAbsolutePath())
                 .append(File.separator).append(DOWNLOAD_FOLDER_NAME).append(File.separator)
                 .append(mSaveName).toString();
         if (isPatch) {
-doInBackground(apkFilePath);
+            doInBackground(apkFilePath);
         } else if (isSilentInstall) {
             Log.e(TAG, ": 静默安装路径=" + apkFilePath);
             excutesucmd(apkFilePath);
@@ -211,7 +211,7 @@ doInBackground(apkFilePath);
 
         if (packageInfo != null) {
 
-            //            requestOldMD5(packageInfo.versionCode, packageInfo.versionName);
+//                        requestOldMD5(packageInfo.versionCode, packageInfo.versionName);
 
             String oldApkSource = ApkUtils.getSourceApkPath(mContext, Constants.TEST_PACKAGENAME);
 
@@ -224,56 +224,28 @@ doInBackground(apkFilePath);
                     if (patchResult == 0) {
 
                         if (SignUtils.checkMd5(Constants.NEW_APK_PATH, mNewRealMD5)) {
-                            ApkUtils.installApk(mContext, Constants.NEW_APK_PATH);
+                             installApk(mContext, Constants.NEW_APK_PATH);
+                            Log.e("doInBackground","11111111111111111");
                             return WHAT_SUCCESS;
                         } else {
+                            Log.e("doInBackground","222222222222");
                             return WHAT_FAIL_GEN_MD5;
                         }
                     } else {
+                        Log.e("doInBackground","333333333");
                         return WHAT_FAIL_PATCH;
                     }
                 } else {
+                    Log.e("doInBackground","4444444444");
                     return WHAT_FAIL_OLD_MD5;
                 }
             } else {
+                Log.e("doInBackground","5555555555555");
                 return WHAT_FAIL_GET_SOURCE;
             }
         } else {
+            Log.e("doInBackground","6666666666666");
             return WHAT_FAIL_UNKNOWN;
-        }
-    }
-
-
-    protected void onPostExecute(Integer result) {
-
-        switch (result) {
-            case WHAT_SUCCESS: {
-
-                String text = "新apk已合成成功：" + Constants.NEW_APK_PATH;
-
-
-                break;
-            }
-            case WHAT_FAIL_OLD_MD5: {
-                String text = "现在安装的WeiboV5.5的MD5不对！";
-
-                break;
-            }
-            case WHAT_FAIL_GEN_MD5: {
-                String text = "合成完毕，但是合成得到的apk MD5不对！";
-
-                break;
-            }
-            case WHAT_FAIL_PATCH: {
-                String text = "新apk已合成失败！";
-
-                break;
-            }
-            case WHAT_FAIL_GET_SOURCE: {
-                String text = "无法获取微博客户端的源apk文件，只能整包更新了！";
-
-                break;
-            }
         }
     }
 
@@ -296,8 +268,40 @@ doInBackground(apkFilePath);
                 uri = Uri.fromFile(apkFile);
             } else { // Android 7.0 以上
                 uri = FileProvider.getUriForFile(context,
-                        "com.szwyx.rxb.fileProvider",
+                        "com.cundong.apkpatch.example.fileProvider",
                         new File(Environment.getExternalStorageDirectory() + File.separator + DOWNLOAD_FOLDER_NAME, mSaveName));
+                Log.e(TAG, "installApk: uri=" + uri);
+                intentInstall.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            }
+
+            // 安装应用
+            Log.e(TAG, "下载完成了");
+
+            intentInstall.setDataAndType(uri, "application/vnd.android.package-archive");
+            context.startActivity(intentInstall);
+        }
+    }
+    /**
+     * @param context
+     */
+    private void installApk(Context context,String apkPath) {
+        Uri uri;
+        Intent intentInstall = new Intent();
+        intentInstall.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intentInstall.setAction(Intent.ACTION_VIEW);
+        long downloadId = UpdateUtils.getLong(context, APK_DOWNLOAD_ID);
+        //clear downloadId
+        UpdateUtils.removeSharedPreferenceByKey(context, APK_DOWNLOAD_ID);
+        if (mCompleteDownloadId == downloadId) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) { // 6.0以下
+                uri = Uri.parse("file://" + apkPath);
+            } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) { // 6.0 - 7.0
+                File apkFile = new File(apkPath);
+                uri = Uri.fromFile(apkFile);
+            } else { // Android 7.0 以上
+                uri = FileProvider.getUriForFile(context,
+                        "com.cundong.apkpatch.example.fileProvider",
+                        new File(apkPath));
                 Log.e(TAG, "installApk: uri=" + uri);
                 intentInstall.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             }
@@ -480,7 +484,7 @@ doInBackground(apkFilePath);
         }
 
         public ApkDownloader builder() {
-            if (mSaveName == null) {
+            if (TextUtils.isEmpty(mSaveName)) {
                 this.mSaveName = mDownloadUrl.substring(mDownloadUrl.lastIndexOf("/") + 1);
             }
             return new ApkDownloader(this);
