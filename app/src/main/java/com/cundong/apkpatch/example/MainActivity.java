@@ -1,5 +1,6 @@
 package com.cundong.apkpatch.example;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -22,6 +23,7 @@ import com.cundong.OkHttpClientManager;
 import com.cundong.apkpatch.example.update.ApkDownloader;
 import com.cundong.apkpatch.example.update.UpdateInfo;
 import com.cundong.apkpatch.example.update.UpdateService;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -36,23 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final String TAG = Constants.DEBUG ? "MainActivity" : MainActivity.class.getSimpleName();
 
-    // 成功
-    private static final int WHAT_SUCCESS = 1;
 
-    // 本地安装的微博MD5不正确
-    private static final int WHAT_FAIL_OLD_MD5 = -1;
-
-    // 新生成的微博MD5不正确
-    private static final int WHAT_FAIL_GEN_MD5 = -2;
-
-    // 合成失败
-    private static final int WHAT_FAIL_PATCH = -3;
-
-    // 获取源文件失败
-    private static final int WHAT_FAIL_GET_SOURCE = -4;
-
-    // 未知错误
-    private static final int WHAT_FAIL_UNKNOWN = -5;
 
     private Context mContext = null;
 
@@ -101,19 +87,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updateInfo.setAppName("任行宝");
         updateInfo.setVersionCode(4);
         updateInfo.setDescription("");
-        updateInfo.setDownUrl("http://rengxingbao.oss-cn-shenzhen.aliyuncs.com/androd-apk/2018/12/17/363840e9c0aa4511a40df146c9cf1c86363840e9c0aa4511a40df146c9cf1c86363840e9c0aa4511a40df146c9cf1c86.apk");
-        updateInfo.setIsPatch(1);
-        updateInfo.setOpenSilent(0);
+        updateInfo.setDownUrl("http://rengxingbao.oss-cn-shenzhen.aliyuncs.com/androd-apk/2018/12/04/f10973e330a94e108ff1b0ccce618c0ef10973e330a94e108ff1b0ccce618c0ef10973e330a94e108ff1b0ccce618c0e.apk");
+        updateInfo.setIsPatch(0);
+        updateInfo.setOpenSilent(1);
         updateInfo.setVersionName("44");
         Log.e("http://rengxingbao", "http://rengxingbao");
 //        showDialog(this, updateInfo);
         update(updateInfo);
     }
+
     private ApkDownloader downloader;
     private String mSaveName;
+
     private void showDialog(final Context context, final UpdateInfo info) {
 
-        final Dialog dialog = new AlertDialog.Builder(context)
+          Dialog dialog = new AlertDialog.Builder(context)
                 .setIcon(R.mipmap.ic_launcher)
                 .setTitle("更新提示")
                 .setMessage(info.getDescription())
@@ -138,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 })
                 .create();
-//        dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+
 
         dialog.show();
 
@@ -168,6 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return versionCode;
     }
+
     public void update(UpdateInfo info) {
 
         downloader = new ApkDownloader.Builder(this)
@@ -181,7 +170,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (info.getDownUrl() != null) {//如果开启静默安装直接下载，否则显示更新对话框
             if (info.getOpenSilent() == 1) {
                 //下载应用
-                Log.d("TAG", "Update: 静默安装：：");
                 downloader.startDownload();
             } else {
                 showDialog(this, info);
@@ -209,9 +197,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 
         dialog.show();
-
-
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will

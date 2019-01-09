@@ -80,7 +80,7 @@ public class SignUtils {
 		if (md5.equals(fileMd5)) {
 			return true;
 		} else {
-			return true;//应该返回false
+			return false;//应该返回false
 		}
 	}
 

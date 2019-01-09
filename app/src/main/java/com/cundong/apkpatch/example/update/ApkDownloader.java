@@ -32,14 +32,14 @@ import java.io.PrintWriter;
 
 public class ApkDownloader {
     private final boolean isPatch;
-    private String mCurentRealMD5="dfdf", mNewRealMD5="dsfsdf";
+    private String mCurentRealMD5 = "37:0D:6C:CC:7B:BD:14:F4:AA:66:9D:81:22:B5:30:BA", mNewRealMD5 = "";
     // 成功
     private static final int WHAT_SUCCESS = 1;
 
-    // 本地安装的微博MD5不正确
+    // 本地安装的MD5不正确
     private static final int WHAT_FAIL_OLD_MD5 = -1;
 
-    // 新生成的微博MD5不正确
+    // 新生成的MD5不正确
     private static final int WHAT_FAIL_GEN_MD5 = -2;
 
     // 合成失败
@@ -171,15 +171,15 @@ public class ApkDownloader {
     }
 
     private void beforeInstallApk(Context context) {
-        Log.e("ApkDownloader","beforeInstallApk"+Thread.currentThread().getName());
+        Log.e("ApkDownloader", "beforeInstallApk" + Thread.currentThread().getName());
         String apkFilePath = new StringBuilder(Environment.getExternalStorageDirectory().getAbsolutePath())
                 .append(File.separator).append(DOWNLOAD_FOLDER_NAME).append(File.separator)
                 .append(mSaveName).toString();
         if (isPatch) {
             doInBackground(apkFilePath);
         } else if (isSilentInstall) {
-            Log.e(TAG, ": 静默安装路径=" + apkFilePath);
-            excutesucmd(apkFilePath);
+//            Log.e(TAG, ": 静默安装路径=" + apkFilePath);
+            Log.e(TAG, ": 静默安装路径=" + installSilent(context, apkFilePath));
         } else {
             Log.e(TAG, "onReceive: 非静默安装");
             installApk(context);
@@ -225,27 +225,27 @@ public class ApkDownloader {
                     if (patchResult == 0) {
 
                         if (SignUtils.checkMd5(Constants.NEW_APK_PATH, mNewRealMD5)) {
-                             installApk(mContext, Constants.NEW_APK_PATH);
-                            Log.e("doInBackground","11111111111111111");
+                            installApk(mContext, Constants.NEW_APK_PATH);
+                            Log.e("doInBackground", "11111111111111111");
                             return WHAT_SUCCESS;
                         } else {
-                            Log.e("doInBackground","222222222222");
+                            Log.e("doInBackground", "222222222222");
                             return WHAT_FAIL_GEN_MD5;
                         }
                     } else {
-                        Log.e("doInBackground","333333333");
+                        Log.e("doInBackground", "333333333");
                         return WHAT_FAIL_PATCH;
                     }
                 } else {
-                    Log.e("doInBackground","4444444444");
+                    Log.e("doInBackground", "4444444444");
                     return WHAT_FAIL_OLD_MD5;
                 }
             } else {
-                Log.e("doInBackground","5555555555555");
+                Log.e("doInBackground", "5555555555555");
                 return WHAT_FAIL_GET_SOURCE;
             }
         } else {
-            Log.e("doInBackground","6666666666666");
+            Log.e("doInBackground", "6666666666666");
             return WHAT_FAIL_UNKNOWN;
         }
     }
@@ -282,10 +282,11 @@ public class ApkDownloader {
             context.startActivity(intentInstall);
         }
     }
+
     /**
      * @param context
      */
-    private void installApk(Context context,String apkPath) {
+    private void installApk(Context context, String apkPath) {
         Uri uri;
         Intent intentInstall = new Intent();
         intentInstall.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -343,7 +344,7 @@ public class ApkDownloader {
     }
 
     //静默安装方法，返回值是0代表成功，1失败，其他不知
-    public static int installSilent(String path) {
+    public static int installSilent(Context context,String path) {
         PrintWriter PrintWriter = null;
         Process process = null;
         try {
@@ -386,7 +387,7 @@ public class ApkDownloader {
         }
     }
 
-    protected void excutesucmd(String currenttempfilepath) {
+    protected void excutesucmd(Context context, String currenttempfilepath) {
         Process process = null;
         OutputStream out = null;
         InputStream in = null;
@@ -412,10 +413,9 @@ public class ApkDownloader {
                     mContext.sendBroadcast(intent);
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
+            installApk(context, currenttempfilepath);
         } finally {
             try {
                 if (out != null) {
